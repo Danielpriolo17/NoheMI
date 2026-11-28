@@ -5,28 +5,34 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AppModule = exports.ObserveInstrument = exports.ObserveModule = void 0;
+exports.AppModule = void 0;
 const common_1 = require("@nestjs/common");
-const observe_1 = require("@nestjs/observe");
-const app_controller_js_1 = require("./app.controller.js");
-const app_service_js_1 = require("./app.service.js");
-_a = (0, observe_1.createObserveModule)(), exports.ObserveModule = _a.ObserveModule, exports.ObserveInstrument = _a.ObserveInstrument;
+const config_1 = require("@nestjs/config");
+const core_1 = require("@nestjs/core");
+const throttler_1 = require("@nestjs/throttler");
+const jwt_auth_guard_1 = require("./modules/security/infra/http/guards/jwt-auth.guard");
+const rbac_guard_1 = require("./modules/security/infra/http/guards/rbac.guard");
+const sensitive_masking_interceptor_1 = require("./modules/security/infra/http/interceptors/sensitive-masking.interceptor");
+const security_module_1 = require("./modules/security/security.module");
+const shared_module_1 = require("./shared/infra/shared.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            exports.ObserveModule.forRoot({
-                appKey: process.env.OBSERVE_APP_KEY ?? 'YOUR_APP_KEY',
-                appSecret: process.env.OBSERVE_APP_SECRET ?? 'YOUR_APP_SECRET',
-                serviceId: 'api',
-            }),
+            config_1.ConfigModule.forRoot({ isGlobal: true }),
+            throttler_1.ThrottlerModule.forRoot([{ ttl: 60000, limit: 120 }]),
+            shared_module_1.SharedModule,
+            security_module_1.SecurityModule,
         ],
-        controllers: [app_controller_js_1.AppController],
-        providers: [app_service_js_1.AppService],
+        providers: [
+            { provide: core_1.APP_GUARD, useClass: throttler_1.ThrottlerGuard },
+            { provide: core_1.APP_GUARD, useClass: jwt_auth_guard_1.JwtAuthGuard },
+            { provide: core_1.APP_GUARD, useClass: rbac_guard_1.RbacGuard },
+            { provide: core_1.APP_INTERCEPTOR, useClass: sensitive_masking_interceptor_1.SensitiveMaskingInterceptor },
+        ],
     })
 ], AppModule);
 //# sourceMappingURL=app.module.js.map
