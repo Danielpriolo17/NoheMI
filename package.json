@@ -37,3 +37,4 @@
     "prisma": "^7.10.1"
   }
 }
+{ "name": "monorepo-root", "private": true }

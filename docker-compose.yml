@@ -1,0 +1,37 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: nohemi_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: nohemi_admin
+      POSTGRES_PASSWORD: nohemi_dev_password_2026
+      POSTGRES_DB: nohemi_erp
+    ports:
+      - "5432:5432"
+    volumes:
+      - nohemi_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nohemi_admin -d nohemi_erp"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: nohemi_redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "nohemi_redis_dev_2026"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - nohemi_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "nohemi_redis_dev_2026", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  nohemi_pg_data:
+  nohemi_redis_data:
